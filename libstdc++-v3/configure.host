@@ -58,6 +58,9 @@
 #
 #   error_constants_dir    location of error_constants.h
 #                          defaults to os/generic.
+#   force_enable_attr_weak Forces GLIBCXX_USE_ATTR_WEAK to be (un)set, in spite
+#                          of link tests.  The default is to leave it up to the
+#                          tests, but setting either yes or no force.
 #
 # It possibly modifies the following variables:
 #
@@ -90,6 +93,7 @@ atomic_word_dir=cpu/generic
 atomic_flags=""
 atomicity_dir="cpu/generic"
 cpu_defines_dir="cpu/generic"
+force_enable_attr_weak=default
 try_cpu=generic
 abi_baseline_subdir_switch=--print-multi-directory
 abi_tweaks_dir="cpu/generic"
@@ -230,6 +234,7 @@ case "${host_os}" in
     # for proper treatment of coalesced symbols.
     OPT_LDFLAGS="${OPT_LDFLAGS} -Wl,-single_module -Wl,-flat_namespace"
     os_include_dir="os/bsd/darwin"
+    force_enable_attr_weak=yes
     ;;
   darwin8 | darwin8.* )
     # For 8+ compatibility is better if not -flat_namespace.
@@ -240,10 +245,12 @@ case "${host_os}" in
         ;;
     esac
     os_include_dir="os/bsd/darwin"
+    force_enable_attr_weak=yes
     ;;
   darwin*)
     # Post Darwin8, defaults should be sufficient.
     os_include_dir="os/bsd/darwin"
+    force_enable_attr_weak=yes
     ;;
   *djgpp*)      # leading * picks up "msdosdjgpp"
     os_include_dir="os/djgpp"
@@ -315,6 +322,11 @@ esac
 # Set any OS-dependent and CPU-dependent bits.
 # THIS TABLE IS SORTED.  KEEP IT THAT WAY.
 case "${host}" in
+  *-*-elf*)
+    # ELF targets always have __attribute__((weak)), and besides, this target
+    # is always a cross compile, so no link test is ever possible for it.
+    force_enable_attr_weak=yes
+    ;;
   *-*-linux* | *-*-uclinux*)
     case "${host_cpu}" in
       i[567]86)

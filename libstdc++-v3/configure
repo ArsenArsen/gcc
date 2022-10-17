@@ -22337,6 +22337,41 @@ $as_echo "$ac_gcsections" >&6; }
     fi
   fi
 
+  # Detect weak function support.
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether __attribute__ ((weak)) works" >&5
+$as_echo_n "checking whether __attribute__ ((weak)) works... " >&6; }
+if ${glibcxx_cv_can_use_attr_weak+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    if test x$gcc_no_link = xyes; then
+  as_fn_error $? "Link tests are not allowed after GCC_NO_EXECUTABLES." "$LINENO" 5
+fi
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+__attribute__ ((weak)) void f() {}
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  glibcxx_cv_can_use_attr_weak=yes
+else
+  glibcxx_cv_can_use_attr_weak=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+
   # Set -z,relro.
   # Note this is only for shared objects.
   ac_ld_relro=no
@@ -29591,6 +29626,41 @@ $as_echo "$ac_gcsections" >&6; }
     fi
   fi
 
+  # Detect weak function support.
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether __attribute__ ((weak)) works" >&5
+$as_echo_n "checking whether __attribute__ ((weak)) works... " >&6; }
+if ${glibcxx_cv_can_use_attr_weak+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    if test x$gcc_no_link = xyes; then
+  as_fn_error $? "Link tests are not allowed after GCC_NO_EXECUTABLES." "$LINENO" 5
+fi
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+__attribute__ ((weak)) void f() {}
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  glibcxx_cv_can_use_attr_weak=yes
+else
+  glibcxx_cv_can_use_attr_weak=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+
   # Set -z,relro.
   # Note this is only for shared objects.
   ac_ld_relro=no
@@ -35525,6 +35595,41 @@ $as_echo "$ac_gcsections" >&6; }
       CFLAGS=''
     fi
   fi
+
+  # Detect weak function support.
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether __attribute__ ((weak)) works" >&5
+$as_echo_n "checking whether __attribute__ ((weak)) works... " >&6; }
+if ${glibcxx_cv_can_use_attr_weak+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    if test x$gcc_no_link = xyes; then
+  as_fn_error $? "Link tests are not allowed after GCC_NO_EXECUTABLES." "$LINENO" 5
+fi
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+__attribute__ ((weak)) void f() {}
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  glibcxx_cv_can_use_attr_weak=yes
+else
+  glibcxx_cv_can_use_attr_weak=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
 
   # Set -z,relro.
   # Note this is only for shared objects.
@@ -47460,6 +47565,41 @@ $as_echo "$ac_gcsections" >&6; }
     fi
   fi
 
+  # Detect weak function support.
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether __attribute__ ((weak)) works" >&5
+$as_echo_n "checking whether __attribute__ ((weak)) works... " >&6; }
+if ${glibcxx_cv_can_use_attr_weak+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    if test x$gcc_no_link = xyes; then
+  as_fn_error $? "Link tests are not allowed after GCC_NO_EXECUTABLES." "$LINENO" 5
+fi
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+__attribute__ ((weak)) void f() {}
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  glibcxx_cv_can_use_attr_weak=yes
+else
+  glibcxx_cv_can_use_attr_weak=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+
   # Set -z,relro.
   # Note this is only for shared objects.
   ac_ld_relro=no
@@ -47747,6 +47887,41 @@ $as_echo "$ac_gcsections" >&6; }
       CFLAGS=''
     fi
   fi
+
+  # Detect weak function support.
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether __attribute__ ((weak)) works" >&5
+$as_echo_n "checking whether __attribute__ ((weak)) works... " >&6; }
+if ${glibcxx_cv_can_use_attr_weak+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    if test x$gcc_no_link = xyes; then
+  as_fn_error $? "Link tests are not allowed after GCC_NO_EXECUTABLES." "$LINENO" 5
+fi
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+__attribute__ ((weak)) void f() {}
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  glibcxx_cv_can_use_attr_weak=yes
+else
+  glibcxx_cv_can_use_attr_weak=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
 
   # Set -z,relro.
   # Note this is only for shared objects.
@@ -48212,6 +48387,41 @@ $as_echo "$ac_gcsections" >&6; }
       CFLAGS=''
     fi
   fi
+
+  # Detect weak function support.
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether __attribute__ ((weak)) works" >&5
+$as_echo_n "checking whether __attribute__ ((weak)) works... " >&6; }
+if ${glibcxx_cv_can_use_attr_weak+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    if test x$gcc_no_link = xyes; then
+  as_fn_error $? "Link tests are not allowed after GCC_NO_EXECUTABLES." "$LINENO" 5
+fi
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+__attribute__ ((weak)) void f() {}
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  glibcxx_cv_can_use_attr_weak=yes
+else
+  glibcxx_cv_can_use_attr_weak=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
 
   # Set -z,relro.
   # Note this is only for shared objects.
@@ -54615,6 +54825,41 @@ $as_echo "$ac_gcsections" >&6; }
     fi
   fi
 
+  # Detect weak function support.
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether __attribute__ ((weak)) works" >&5
+$as_echo_n "checking whether __attribute__ ((weak)) works... " >&6; }
+if ${glibcxx_cv_can_use_attr_weak+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    if test x$gcc_no_link = xyes; then
+  as_fn_error $? "Link tests are not allowed after GCC_NO_EXECUTABLES." "$LINENO" 5
+fi
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+__attribute__ ((weak)) void f() {}
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  glibcxx_cv_can_use_attr_weak=yes
+else
+  glibcxx_cv_can_use_attr_weak=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+
   # Set -z,relro.
   # Note this is only for shared objects.
   ac_ld_relro=no
@@ -60766,6 +61011,41 @@ $as_echo "$ac_gcsections" >&6; }
     fi
   fi
 
+  # Detect weak function support.
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether __attribute__ ((weak)) works" >&5
+$as_echo_n "checking whether __attribute__ ((weak)) works... " >&6; }
+if ${glibcxx_cv_can_use_attr_weak+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    if test x$gcc_no_link = xyes; then
+  as_fn_error $? "Link tests are not allowed after GCC_NO_EXECUTABLES." "$LINENO" 5
+fi
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+__attribute__ ((weak)) void f() {}
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  glibcxx_cv_can_use_attr_weak=yes
+else
+  glibcxx_cv_can_use_attr_weak=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+
   # Set -z,relro.
   # Note this is only for shared objects.
   ac_ld_relro=no
@@ -60978,6 +61258,41 @@ $as_echo "$ac_gcsections" >&6; }
       CFLAGS=''
     fi
   fi
+
+  # Detect weak function support.
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether __attribute__ ((weak)) works" >&5
+$as_echo_n "checking whether __attribute__ ((weak)) works... " >&6; }
+if ${glibcxx_cv_can_use_attr_weak+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    if test x$gcc_no_link = xyes; then
+  as_fn_error $? "Link tests are not allowed after GCC_NO_EXECUTABLES." "$LINENO" 5
+fi
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+__attribute__ ((weak)) void f() {}
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  glibcxx_cv_can_use_attr_weak=yes
+else
+  glibcxx_cv_can_use_attr_weak=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $glibcxx_cv_can_use_attr_weak" >&5
+$as_echo "$glibcxx_cv_can_use_attr_weak" >&6; }
 
   # Set -z,relro.
   # Note this is only for shared objects.
@@ -68321,6 +68636,23 @@ esac
     $as_echo "#define HAVE_TANHL 1" >>confdefs.h
 
   fi
+fi
+
+# Now that we gave link tests and crossconfig a chance to set
+# glibcxx_cv_can_use_attr_weak, apply it.  Also, force it if configure.host
+# says so.
+should_use_attr_weak="$glibcxx_cv_can_use_attr_weak"
+if test x"$force_enable_attr_weak" != xdefault; then
+  should_use_attr_weak="$force_enable_attr_weak"
+fi
+
+if test x"$should_use_attr_weak" = xyes; then
+
+$as_echo "#define _GLIBCXX_WEAK_DEFINITION __attribute__ ((weak))" >>confdefs.h
+
+else
+  $as_echo "#define _GLIBCXX_WEAK_DEFINITION /**/" >>confdefs.h
+
 fi
 
 # Check for _Unwind_GetIPInfo.

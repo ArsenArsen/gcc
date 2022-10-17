@@ -670,13 +670,6 @@ namespace std
 # define _GLIBCXX_PSEUDO_VISIBILITY(V)
 #endif
 
-// Certain function definitions that are meant to be overridable from
-// user code are decorated with this macro.  For some targets, this
-// macro causes these definitions to be weak.
-#ifndef _GLIBCXX_WEAK_DEFINITION
-# define _GLIBCXX_WEAK_DEFINITION
-#endif
-
 // By default, we assume that __GXX_WEAK__ also means that there is support
 // for declaring functions as weak while not defining such functions.  This
 // allows for referring to functions provided by other libraries (e.g.,

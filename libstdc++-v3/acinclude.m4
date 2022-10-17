@@ -273,6 +273,16 @@ AC_DEFUN([GLIBCXX_CHECK_LINKER_FEATURES], [
     fi
   fi
 
+  # Detect weak function support.
+  AC_CACHE_CHECK([whether __attribute__ ((weak)) works],
+                 [glibcxx_cv_can_use_attr_weak], [
+    AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM([__attribute__ ((weak)) void f() {}], [])],
+      [glibcxx_cv_can_use_attr_weak=yes],
+      [glibcxx_cv_can_use_attr_weak=no])
+  ])
+  AC_MSG_RESULT($glibcxx_cv_can_use_attr_weak)
+
   # Set -z,relro.
   # Note this is only for shared objects.
   ac_ld_relro=no

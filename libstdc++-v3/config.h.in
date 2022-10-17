@@ -1046,6 +1046,9 @@
 /* Define to 1 if a verbose library is built, or 0 otherwise. */
 #undef _GLIBCXX_VERBOSE
 
+/* Marks a definition as weak, if supported. */
+#undef _GLIBCXX_WEAK_DEFINITION
+
 /* Defined if as can handle rdrand. */
 #undef _GLIBCXX_X86_RDRAND
 

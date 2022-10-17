@@ -420,6 +420,21 @@ else
   fi
 fi
 
+# Now that we gave link tests and crossconfig a chance to set
+# glibcxx_cv_can_use_attr_weak, apply it.  Also, force it if configure.host
+# says so.
+should_use_attr_weak="$glibcxx_cv_can_use_attr_weak"
+if test x"$force_enable_attr_weak" != xdefault; then
+  should_use_attr_weak="$force_enable_attr_weak"
+fi
+
+if test x"$should_use_attr_weak" = xyes; then
+  AC_DEFINE([_GLIBCXX_WEAK_DEFINITION], [__attribute__ ((weak))],
+            [Marks a definition as weak, if supported.])
+else
+  AC_DEFINE([_GLIBCXX_WEAK_DEFINITION], [])
+fi
+
 # Check for _Unwind_GetIPInfo.
 GCC_CHECK_UNWIND_GETIPINFO
 
