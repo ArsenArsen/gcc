@@ -112,6 +112,8 @@ endif
 parallel_sources = parallel_settings.cc
 
 # Sources present in the src directory, always present.
+sources_freestanding =
+
 sources = \
 	bitmap_allocator.cc \
 	pool_allocator.cc \
@@ -148,7 +150,11 @@ sources = \
 
 vpath % $(top_srcdir)/src/c++98
 
+if GLIBCXX_HOSTED
 libc__98convenience_la_SOURCES = $(sources)
+else
+libc__98convenience_la_SOURCES =
+endif
 
 # Use special rules to compile with -fimplicit-templates.
 c++locale.lo: c++locale.cc
