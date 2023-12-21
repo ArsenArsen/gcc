@@ -1261,6 +1261,8 @@ configure-stage[+id+]-[+prefix+][+module+]:
 [+ ENDIF bootstrap +]
 [+ ENDDEF +]
 
+[+ DEFINE all--args +][+ (get "all_args_override" (get "args")) +][+ ENDDEF +]
+
 [+ DEFINE all +]
 .PHONY: all-[+prefix+][+module+] maybe-all-[+prefix+][+module+]
 maybe-all-[+prefix+][+module+]:
@@ -1277,7 +1279,7 @@ all-[+prefix+][+module+]: configure-[+prefix+][+module+][+ IF bootstrap +][+ ELS
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
 	[+exports+] [+extra_exports+] \
 	(cd [+subdir+]/[+module+] && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) [+args+] [+stage1_args+] [+extra_make_flags+] \
+	  $(MAKE) $(BASE_FLAGS_TO_PASS) [+all--args+] [+stage1_args+] [+extra_make_flags+] \
 		$(TARGET-[+prefix+][+module+]))
 @endif [+prefix+][+module+]
 
@@ -1312,7 +1314,7 @@ all-stage[+id+]-[+prefix+][+module+]: configure-stage[+id+]-[+prefix+][+module+]
 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
 		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		[+args+] [+IF prev +][+poststage1_args+][+ ELSE prev +] \
+		[+all--args+] [+IF prev +][+poststage1_args+][+ ELSE prev +] \
 		[+stage1_args+][+ ENDIF prev +] [+extra_make_flags+] \
 		TFLAGS="$(STAGE[+id+]_TFLAGS)" [+profile_data+] \
 		$(TARGET-stage[+id+]-[+prefix+][+module+])
@@ -1327,7 +1329,7 @@ clean-stage[+id+]-[+prefix+][+module+]:
 	  $(MAKE) stage[+id+]-start; \
 	fi; \
 	cd [+subdir+]/[+module+] && \
-	$(MAKE) [+args+] [+ IF prev +][+poststage1_args+][+ ELSE prev +] \
+	$(MAKE) [+all--args+] [+ IF prev +][+poststage1_args+][+ ELSE prev +] \
 	[+stage1_args+][+ ENDIF prev +] [+extra_make_flags+] clean
 @endif [+prefix+][+module+]-bootstrap
 

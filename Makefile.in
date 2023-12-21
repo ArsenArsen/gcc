@@ -3174,6 +3174,8 @@ TAGS: do-TAGS
 
 
 
+
+
 # --------------------------------------
 # Modules which run on the build machine
 # --------------------------------------
@@ -20195,7 +20197,7 @@ all-gettext: configure-gettext
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
 	$(HOST_EXPORTS)  \
 	(cd $(HOST_SUBDIR)/gettext && \
-	  $(MAKE) $(BASE_FLAGS_TO_PASS) $(EXTRA_HOST_FLAGS) $(STAGE1_FLAGS_TO_PASS)  \
+	  $(MAKE) $(BASE_FLAGS_TO_PASS)  $(STAGE1_FLAGS_TO_PASS)  \
 		$(TARGET-gettext))
 @endif gettext
 
@@ -20225,7 +20227,7 @@ all-stage1-gettext: configure-stage1-gettext
 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
 		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS)  \
+		  \
 		$(STAGE1_FLAGS_TO_PASS)  \
 		TFLAGS="$(STAGE1_TFLAGS)"  \
 		$(TARGET-stage1-gettext)
@@ -20240,7 +20242,7 @@ clean-stage1-gettext:
 	  $(MAKE) stage1-start; \
 	fi; \
 	cd $(HOST_SUBDIR)/gettext && \
-	$(MAKE) $(EXTRA_HOST_FLAGS)  \
+	$(MAKE)   \
 	$(STAGE1_FLAGS_TO_PASS)  clean
 @endif gettext-bootstrap
 
@@ -20270,7 +20272,7 @@ all-stage2-gettext: configure-stage2-gettext
 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
 		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
+		 $(POSTSTAGE1_FLAGS_TO_PASS)  \
 		TFLAGS="$(STAGE2_TFLAGS)"  \
 		$(TARGET-stage2-gettext)
 
@@ -20284,7 +20286,7 @@ clean-stage2-gettext:
 	  $(MAKE) stage2-start; \
 	fi; \
 	cd $(HOST_SUBDIR)/gettext && \
-	$(MAKE) $(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  clean
+	$(MAKE)  $(POSTSTAGE1_FLAGS_TO_PASS)  clean
 @endif gettext-bootstrap
 
 
@@ -20313,7 +20315,7 @@ all-stage3-gettext: configure-stage3-gettext
 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
 		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
+		 $(POSTSTAGE1_FLAGS_TO_PASS)  \
 		TFLAGS="$(STAGE3_TFLAGS)"  \
 		$(TARGET-stage3-gettext)
 
@@ -20327,7 +20329,7 @@ clean-stage3-gettext:
 	  $(MAKE) stage3-start; \
 	fi; \
 	cd $(HOST_SUBDIR)/gettext && \
-	$(MAKE) $(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  clean
+	$(MAKE)  $(POSTSTAGE1_FLAGS_TO_PASS)  clean
 @endif gettext-bootstrap
 
 
@@ -20356,7 +20358,7 @@ all-stage4-gettext: configure-stage4-gettext
 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
 		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
+		 $(POSTSTAGE1_FLAGS_TO_PASS)  \
 		TFLAGS="$(STAGE4_TFLAGS)"  \
 		$(TARGET-stage4-gettext)
 
@@ -20370,7 +20372,7 @@ clean-stage4-gettext:
 	  $(MAKE) stage4-start; \
 	fi; \
 	cd $(HOST_SUBDIR)/gettext && \
-	$(MAKE) $(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  clean
+	$(MAKE)  $(POSTSTAGE1_FLAGS_TO_PASS)  clean
 @endif gettext-bootstrap
 
 
@@ -20399,7 +20401,7 @@ all-stageprofile-gettext: configure-stageprofile-gettext
 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
 		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
+		 $(POSTSTAGE1_FLAGS_TO_PASS)  \
 		TFLAGS="$(STAGEprofile_TFLAGS)"  \
 		$(TARGET-stageprofile-gettext)
 
@@ -20413,7 +20415,7 @@ clean-stageprofile-gettext:
 	  $(MAKE) stageprofile-start; \
 	fi; \
 	cd $(HOST_SUBDIR)/gettext && \
-	$(MAKE) $(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  clean
+	$(MAKE)  $(POSTSTAGE1_FLAGS_TO_PASS)  clean
 @endif gettext-bootstrap
 
 
@@ -20442,7 +20444,7 @@ all-stagetrain-gettext: configure-stagetrain-gettext
 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
 		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
+		 $(POSTSTAGE1_FLAGS_TO_PASS)  \
 		TFLAGS="$(STAGEtrain_TFLAGS)"  \
 		$(TARGET-stagetrain-gettext)
 
@@ -20456,7 +20458,7 @@ clean-stagetrain-gettext:
 	  $(MAKE) stagetrain-start; \
 	fi; \
 	cd $(HOST_SUBDIR)/gettext && \
-	$(MAKE) $(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  clean
+	$(MAKE)  $(POSTSTAGE1_FLAGS_TO_PASS)  clean
 @endif gettext-bootstrap
 
 
@@ -20485,7 +20487,7 @@ all-stagefeedback-gettext: configure-stagefeedback-gettext
 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
 		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
+		 $(POSTSTAGE1_FLAGS_TO_PASS)  \
 		TFLAGS="$(STAGEfeedback_TFLAGS)"  \
 		$(TARGET-stagefeedback-gettext)
 
@@ -20499,7 +20501,7 @@ clean-stagefeedback-gettext:
 	  $(MAKE) stagefeedback-start; \
 	fi; \
 	cd $(HOST_SUBDIR)/gettext && \
-	$(MAKE) $(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  clean
+	$(MAKE)  $(POSTSTAGE1_FLAGS_TO_PASS)  clean
 @endif gettext-bootstrap
 
 
@@ -20528,7 +20530,7 @@ all-stageautoprofile-gettext: configure-stageautoprofile-gettext
 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
 		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
+		 $(POSTSTAGE1_FLAGS_TO_PASS)  \
 		TFLAGS="$(STAGEautoprofile_TFLAGS)"  \
 		$(TARGET-stageautoprofile-gettext)
 
@@ -20542,7 +20544,7 @@ clean-stageautoprofile-gettext:
 	  $(MAKE) stageautoprofile-start; \
 	fi; \
 	cd $(HOST_SUBDIR)/gettext && \
-	$(MAKE) $(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  clean
+	$(MAKE)  $(POSTSTAGE1_FLAGS_TO_PASS)  clean
 @endif gettext-bootstrap
 
 
@@ -20571,7 +20573,7 @@ all-stageautofeedback-gettext: configure-stageautofeedback-gettext
 		CFLAGS_FOR_TARGET="$(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="$(CXXFLAGS_FOR_TARGET)" \
 		LIBCFLAGS_FOR_TARGET="$(LIBCFLAGS_FOR_TARGET)" \
-		$(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  \
+		 $(POSTSTAGE1_FLAGS_TO_PASS)  \
 		TFLAGS="$(STAGEautofeedback_TFLAGS)" PERF_DATA=perf.data \
 		$(TARGET-stageautofeedback-gettext)
 
@@ -20585,7 +20587,7 @@ clean-stageautofeedback-gettext:
 	  $(MAKE) stageautofeedback-start; \
 	fi; \
 	cd $(HOST_SUBDIR)/gettext && \
-	$(MAKE) $(EXTRA_HOST_FLAGS) $(POSTSTAGE1_FLAGS_TO_PASS)  clean
+	$(MAKE)  $(POSTSTAGE1_FLAGS_TO_PASS)  clean
 @endif gettext-bootstrap
 
 

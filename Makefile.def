@@ -76,6 +76,8 @@ host_modules= { module= gprof; };
 host_modules= { module= gprofng; };
 host_modules= { module= gettext; bootstrap=true; no_install=true;
                 module_srcdir= "gettext/gettext-runtime";
+		// Don't override configure-discovered build arguments
+		all_args_override="";
 		// We always build gettext with pic, because some packages (e.g. gdbserver)
 		// need it in some configuratons, which is determined via nontrivial tests.
 		// Always enabling pic seems to make sense for something tied to
