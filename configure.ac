@@ -3097,6 +3097,27 @@ case " ${configdirs} " in
     ;;
 esac
 
+# Check whether we should inject an in-tree libiconv into our subconfigures.
+LIBICONV_EXTRA_CPPFLAGS=
+LIBICONV_SIBLING=
+LTLIBICONV_SIBLING=
+LIBICONV_CVS=
+case " ${configdirs} " in
+  *\ libiconv\ *)
+  # For out-of-tree dependencies that might use libiconv (e.g. gettext).
+  # https://lists.gnu.org/archive/html/bug-gettext/2023-11/msg00056.html
+  LIBICONV_EXTRA_CPPFLAGS="-I`${PWDCMD-pwd}`/\$(HOST_SUBDIR)/libiconv/include"
+  LIBICONV_SIBLING="`${PWDCMD-pwd}`/\$(HOST_SUBDIR)/libiconv/lib/.libs/libiconv.a"
+  LTLIBICONV_SIBLING="`${PWDCMD-pwd}`/\$(HOST_SUBDIR)/libiconv/lib/.libs/libiconv.la"
+  # Cache vars used for tricking iconv.m4.
+  LIBICONV_CVS="am_cv_func_iconv=yes am_cv_lib_iconv=no am_cv_func_iconv_works=yes"
+  ;;
+esac
+AC_SUBST([LIBICONV_EXTRA_CPPFLAGS])
+AC_SUBST([LIBICONV_SIBLING])
+AC_SUBST([LTLIBICONV_SIBLING])
+AC_SUBST([LIBICONV_CVS])
+
 # Strip out unwanted targets.
 
 # While at that, we remove Makefiles if we were started for recursive

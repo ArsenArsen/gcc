@@ -6,6 +6,7 @@ dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
 
 dnl From Bruno Haible.
+dnl with modifications to support building with in-tree libiconv
 
 AC_PREREQ([2.64])
 
@@ -34,16 +35,15 @@ AC_DEFUN([AM_ICONV_LINK],
   dnl accordingly.
   AC_REQUIRE([AM_ICONV_LINKFLAGS_BODY])
 
-  dnl Add $INCICONV to CPPFLAGS before performing the following checks,
-  dnl because if the user has installed libiconv and not disabled its use
-  dnl via --without-libiconv-prefix, he wants to use it. The first
-  dnl AC_LINK_IFELSE will then fail, the second AC_LINK_IFELSE will succeed.
-  am_save_CPPFLAGS="$CPPFLAGS"
-  AC_LIB_APPENDTOVAR([CPPFLAGS], [$INCICONV])
-
   AC_CACHE_CHECK([for iconv], [am_cv_func_iconv], [
     am_cv_func_iconv="no, consider installing GNU libiconv"
     am_cv_lib_iconv=no
+    dnl Add $INCICONV to CPPFLAGS before performing the following checks,
+    dnl because if the user has installed libiconv and not disabled its use
+    dnl via --without-libiconv-prefix, he wants to use it. The first
+    dnl AC_LINK_IFELSE will then fail, the second AC_LINK_IFELSE will succeed.
+    am_save_CPPFLAGS="$CPPFLAGS"
+    AC_LIB_APPENDTOVAR([CPPFLAGS], [$INCICONV])
     AC_LINK_IFELSE(
       [AC_LANG_PROGRAM(
          [[
@@ -54,8 +54,39 @@ AC_DEFUN([AM_ICONV_LINK],
            iconv(cd,NULL,NULL,NULL,NULL);
            iconv_close(cd);]])],
       [am_cv_func_iconv=yes])
+    CPPFLAGS="$am_save_CPPFLAGS"
+
+    if test "$am_cv_func_iconv" != yes && test -d ../libiconv; then
+      for _libs in .libs _libs; do
+        am_save_CPPFLAGS="$CPPFLAGS"
+        am_save_LIBS="$LIBS"
+        CPPFLAGS="$CPPFLAGS -I../libiconv/include"
+        LIBS="$LIBS ../libiconv/lib/$_libs/libiconv.a"
+        AC_TRY_LINK([#include <stdlib.h>
+#include <iconv.h>],
+          [iconv_t cd = iconv_open("","");
+           iconv(cd,NULL,NULL,NULL,NULL);
+           iconv_close(cd);],
+          INCICONV="-I../libiconv/include"
+          LIBICONV='${top_builddir}'/../libiconv/lib/"$_libs"/libiconv.a
+          LTLIBICONV='${top_builddir}'/../libiconv/lib/libiconv.la
+          am_cv_lib_iconv=yes
+          # The setup above only works if expanded at make time, so we need to
+          # suppress various configure-time tests.
+          am_cv_func_iconv_works=yes
+          am_cv_func_iconv=yes)
+        CPPFLAGS="$am_save_CPPFLAGS"
+        LIBS="$am_save_LIBS"
+        if test "$am_cv_func_iconv" = "yes"; then
+          break
+        fi
+      done
+    fi
+
     if test "$am_cv_func_iconv" != yes; then
+      am_save_CPPFLAGS="$CPPFLAGS"
       am_save_LIBS="$LIBS"
+      CPPFLAGS="$CPPFLAGS $INCICONV"
       LIBS="$LIBS $LIBICONV"
       AC_LINK_IFELSE(
         [AC_LANG_PROGRAM(
@@ -68,6 +99,7 @@ AC_DEFUN([AM_ICONV_LINK],
              iconv_close(cd);]])],
         [am_cv_lib_iconv=yes]
         [am_cv_func_iconv=yes])
+      CPPFLAGS="$am_save_CPPFLAGS"
       LIBS="$am_save_LIBS"
     fi
   ])
@@ -219,12 +251,10 @@ AC_DEFUN([AM_ICONV_LINK],
       [Define if you have the iconv() function and it works.])
   fi
   if test "$am_cv_lib_iconv" = yes; then
+    AC_LIB_APPENDTOVAR([CPPFLAGS], [$INCICONV])
     AC_MSG_CHECKING([how to link with libiconv])
     AC_MSG_RESULT([$LIBICONV])
   else
-    dnl If $LIBICONV didn't lead to a usable library, we don't need $INCICONV
-    dnl either.
-    CPPFLAGS="$am_save_CPPFLAGS"
     LIBICONV=
     LTLIBICONV=
   fi

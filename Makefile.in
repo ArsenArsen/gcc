@@ -19856,7 +19856,7 @@ configure-gettext:
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
 	test ! -f $(HOST_SUBDIR)/gettext/Makefile || exit 0; \
 	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/gettext; \
-	$(HOST_EXPORTS)  \
+	$(HOST_EXPORTS) LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	echo Configuring in $(HOST_SUBDIR)/gettext; \
 	cd "$(HOST_SUBDIR)/gettext" || exit 1; \
 	case $(srcdir) in \
@@ -19869,7 +19869,7 @@ configure-gettext:
 	  $$s/$$module_srcdir/configure \
 	  --srcdir=$${topdir}/$$module_srcdir \
 	  $(HOST_CONFIGARGS) --build=${build_alias} --host=${host_alias} \
-	  --target=${target_alias} --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf \
+	  --target=${target_alias} --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf CPPFLAGS="@LIBICONV_EXTRA_CPPFLAGS@ $$CPPFLAGS" @LIBICONV_CVS@ \
 	  || exit 1
 @endif gettext
 
@@ -19889,7 +19889,7 @@ configure-stage1-gettext:
 	$(HOST_EXPORTS) \
 	CFLAGS="$(STAGE1_CFLAGS)"; export CFLAGS; \
 	CXXFLAGS="$(STAGE1_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(LIBCFLAGS)"; export LIBCFLAGS;  \
+	LIBCFLAGS="$(LIBCFLAGS)"; export LIBCFLAGS; LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	echo Configuring stage 1 in $(HOST_SUBDIR)/gettext; \
 	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/gettext; \
 	cd $(HOST_SUBDIR)/gettext || exit 1; \
@@ -19905,7 +19905,7 @@ configure-stage1-gettext:
 	  --target=${target_alias} \
 	   \
 	  $(STAGE1_CONFIGURE_FLAGS) \
-	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf
+	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf CPPFLAGS="@LIBICONV_EXTRA_CPPFLAGS@ $$CPPFLAGS" @LIBICONV_CVS@
 @endif gettext-bootstrap
 
 .PHONY: configure-stage2-gettext maybe-configure-stage2-gettext
@@ -19923,7 +19923,7 @@ configure-stage2-gettext:
 	$(POSTSTAGE1_HOST_EXPORTS) \
 	CFLAGS="$(STAGE2_CFLAGS)"; export CFLAGS; \
 	CXXFLAGS="$(STAGE2_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGE2_CFLAGS)"; export LIBCFLAGS;  \
+	LIBCFLAGS="$(STAGE2_CFLAGS)"; export LIBCFLAGS; LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	echo Configuring stage 2 in $(HOST_SUBDIR)/gettext; \
 	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/gettext; \
 	cd $(HOST_SUBDIR)/gettext || exit 1; \
@@ -19939,7 +19939,7 @@ configure-stage2-gettext:
 	  --target=${target_alias} \
 	  --with-build-libsubdir=$(HOST_SUBDIR) \
 	  $(STAGE2_CONFIGURE_FLAGS) \
-	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf
+	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf CPPFLAGS="@LIBICONV_EXTRA_CPPFLAGS@ $$CPPFLAGS" @LIBICONV_CVS@
 @endif gettext-bootstrap
 
 .PHONY: configure-stage3-gettext maybe-configure-stage3-gettext
@@ -19957,7 +19957,7 @@ configure-stage3-gettext:
 	$(POSTSTAGE1_HOST_EXPORTS) \
 	CFLAGS="$(STAGE3_CFLAGS)"; export CFLAGS; \
 	CXXFLAGS="$(STAGE3_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGE3_CFLAGS)"; export LIBCFLAGS;  \
+	LIBCFLAGS="$(STAGE3_CFLAGS)"; export LIBCFLAGS; LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	echo Configuring stage 3 in $(HOST_SUBDIR)/gettext; \
 	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/gettext; \
 	cd $(HOST_SUBDIR)/gettext || exit 1; \
@@ -19973,7 +19973,7 @@ configure-stage3-gettext:
 	  --target=${target_alias} \
 	  --with-build-libsubdir=$(HOST_SUBDIR) \
 	  $(STAGE3_CONFIGURE_FLAGS) \
-	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf
+	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf CPPFLAGS="@LIBICONV_EXTRA_CPPFLAGS@ $$CPPFLAGS" @LIBICONV_CVS@
 @endif gettext-bootstrap
 
 .PHONY: configure-stage4-gettext maybe-configure-stage4-gettext
@@ -19991,7 +19991,7 @@ configure-stage4-gettext:
 	$(POSTSTAGE1_HOST_EXPORTS) \
 	CFLAGS="$(STAGE4_CFLAGS)"; export CFLAGS; \
 	CXXFLAGS="$(STAGE4_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGE4_CFLAGS)"; export LIBCFLAGS;  \
+	LIBCFLAGS="$(STAGE4_CFLAGS)"; export LIBCFLAGS; LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	echo Configuring stage 4 in $(HOST_SUBDIR)/gettext; \
 	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/gettext; \
 	cd $(HOST_SUBDIR)/gettext || exit 1; \
@@ -20007,7 +20007,7 @@ configure-stage4-gettext:
 	  --target=${target_alias} \
 	  --with-build-libsubdir=$(HOST_SUBDIR) \
 	  $(STAGE4_CONFIGURE_FLAGS) \
-	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf
+	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf CPPFLAGS="@LIBICONV_EXTRA_CPPFLAGS@ $$CPPFLAGS" @LIBICONV_CVS@
 @endif gettext-bootstrap
 
 .PHONY: configure-stageprofile-gettext maybe-configure-stageprofile-gettext
@@ -20025,7 +20025,7 @@ configure-stageprofile-gettext:
 	$(POSTSTAGE1_HOST_EXPORTS) \
 	CFLAGS="$(STAGEprofile_CFLAGS)"; export CFLAGS; \
 	CXXFLAGS="$(STAGEprofile_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGEprofile_CFLAGS)"; export LIBCFLAGS;  \
+	LIBCFLAGS="$(STAGEprofile_CFLAGS)"; export LIBCFLAGS; LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	echo Configuring stage profile in $(HOST_SUBDIR)/gettext; \
 	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/gettext; \
 	cd $(HOST_SUBDIR)/gettext || exit 1; \
@@ -20041,7 +20041,7 @@ configure-stageprofile-gettext:
 	  --target=${target_alias} \
 	  --with-build-libsubdir=$(HOST_SUBDIR) \
 	  $(STAGEprofile_CONFIGURE_FLAGS) \
-	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf
+	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf CPPFLAGS="@LIBICONV_EXTRA_CPPFLAGS@ $$CPPFLAGS" @LIBICONV_CVS@
 @endif gettext-bootstrap
 
 .PHONY: configure-stagetrain-gettext maybe-configure-stagetrain-gettext
@@ -20059,7 +20059,7 @@ configure-stagetrain-gettext:
 	$(POSTSTAGE1_HOST_EXPORTS) \
 	CFLAGS="$(STAGEtrain_CFLAGS)"; export CFLAGS; \
 	CXXFLAGS="$(STAGEtrain_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGEtrain_CFLAGS)"; export LIBCFLAGS;  \
+	LIBCFLAGS="$(STAGEtrain_CFLAGS)"; export LIBCFLAGS; LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	echo Configuring stage train in $(HOST_SUBDIR)/gettext; \
 	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/gettext; \
 	cd $(HOST_SUBDIR)/gettext || exit 1; \
@@ -20075,7 +20075,7 @@ configure-stagetrain-gettext:
 	  --target=${target_alias} \
 	  --with-build-libsubdir=$(HOST_SUBDIR) \
 	  $(STAGEtrain_CONFIGURE_FLAGS) \
-	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf
+	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf CPPFLAGS="@LIBICONV_EXTRA_CPPFLAGS@ $$CPPFLAGS" @LIBICONV_CVS@
 @endif gettext-bootstrap
 
 .PHONY: configure-stagefeedback-gettext maybe-configure-stagefeedback-gettext
@@ -20093,7 +20093,7 @@ configure-stagefeedback-gettext:
 	$(POSTSTAGE1_HOST_EXPORTS) \
 	CFLAGS="$(STAGEfeedback_CFLAGS)"; export CFLAGS; \
 	CXXFLAGS="$(STAGEfeedback_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGEfeedback_CFLAGS)"; export LIBCFLAGS;  \
+	LIBCFLAGS="$(STAGEfeedback_CFLAGS)"; export LIBCFLAGS; LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	echo Configuring stage feedback in $(HOST_SUBDIR)/gettext; \
 	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/gettext; \
 	cd $(HOST_SUBDIR)/gettext || exit 1; \
@@ -20109,7 +20109,7 @@ configure-stagefeedback-gettext:
 	  --target=${target_alias} \
 	  --with-build-libsubdir=$(HOST_SUBDIR) \
 	  $(STAGEfeedback_CONFIGURE_FLAGS) \
-	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf
+	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf CPPFLAGS="@LIBICONV_EXTRA_CPPFLAGS@ $$CPPFLAGS" @LIBICONV_CVS@
 @endif gettext-bootstrap
 
 .PHONY: configure-stageautoprofile-gettext maybe-configure-stageautoprofile-gettext
@@ -20127,7 +20127,7 @@ configure-stageautoprofile-gettext:
 	$(POSTSTAGE1_HOST_EXPORTS) \
 	CFLAGS="$(STAGEautoprofile_CFLAGS)"; export CFLAGS; \
 	CXXFLAGS="$(STAGEautoprofile_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGEautoprofile_CFLAGS)"; export LIBCFLAGS;  \
+	LIBCFLAGS="$(STAGEautoprofile_CFLAGS)"; export LIBCFLAGS; LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	echo Configuring stage autoprofile in $(HOST_SUBDIR)/gettext; \
 	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/gettext; \
 	cd $(HOST_SUBDIR)/gettext || exit 1; \
@@ -20143,7 +20143,7 @@ configure-stageautoprofile-gettext:
 	  --target=${target_alias} \
 	  --with-build-libsubdir=$(HOST_SUBDIR) \
 	  $(STAGEautoprofile_CONFIGURE_FLAGS) \
-	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf
+	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf CPPFLAGS="@LIBICONV_EXTRA_CPPFLAGS@ $$CPPFLAGS" @LIBICONV_CVS@
 @endif gettext-bootstrap
 
 .PHONY: configure-stageautofeedback-gettext maybe-configure-stageautofeedback-gettext
@@ -20161,7 +20161,7 @@ configure-stageautofeedback-gettext:
 	$(POSTSTAGE1_HOST_EXPORTS) \
 	CFLAGS="$(STAGEautofeedback_CFLAGS)"; export CFLAGS; \
 	CXXFLAGS="$(STAGEautofeedback_CXXFLAGS)"; export CXXFLAGS; \
-	LIBCFLAGS="$(STAGEautofeedback_CFLAGS)"; export LIBCFLAGS;  \
+	LIBCFLAGS="$(STAGEautofeedback_CFLAGS)"; export LIBCFLAGS; LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	echo Configuring stage autofeedback in $(HOST_SUBDIR)/gettext; \
 	$(SHELL) $(srcdir)/mkinstalldirs $(HOST_SUBDIR)/gettext; \
 	cd $(HOST_SUBDIR)/gettext || exit 1; \
@@ -20177,7 +20177,7 @@ configure-stageautofeedback-gettext:
 	  --target=${target_alias} \
 	  --with-build-libsubdir=$(HOST_SUBDIR) \
 	  $(STAGEautofeedback_CONFIGURE_FLAGS) \
-	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf
+	  --disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf CPPFLAGS="@LIBICONV_EXTRA_CPPFLAGS@ $$CPPFLAGS" @LIBICONV_CVS@
 @endif gettext-bootstrap
 
 
@@ -20195,7 +20195,7 @@ maybe-all-gettext: all-gettext
 all-gettext: configure-gettext
 	@r=`${PWD_COMMAND}`; export r; \
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
-	$(HOST_EXPORTS)  \
+	$(HOST_EXPORTS) LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	(cd $(HOST_SUBDIR)/gettext && \
 	  $(MAKE) $(BASE_FLAGS_TO_PASS)  $(STAGE1_FLAGS_TO_PASS)  \
 		$(TARGET-gettext))
@@ -20216,7 +20216,7 @@ all-stage1-gettext: configure-stage1-gettext
 	@r=`${PWD_COMMAND}`; export r; \
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
 	TFLAGS="$(STAGE1_TFLAGS)"; \
-	$(HOST_EXPORTS)  \
+	$(HOST_EXPORTS) LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	cd $(HOST_SUBDIR)/gettext && \
 	 \
 	$(MAKE) $(BASE_FLAGS_TO_PASS) \
@@ -20261,7 +20261,7 @@ all-stage2-gettext: configure-stage2-gettext
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
 	TFLAGS="$(STAGE2_TFLAGS)"; \
 	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
+	$(POSTSTAGE1_HOST_EXPORTS) LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	cd $(HOST_SUBDIR)/gettext && \
 	 \
 	$(MAKE) $(BASE_FLAGS_TO_PASS) \
@@ -20304,7 +20304,7 @@ all-stage3-gettext: configure-stage3-gettext
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
 	TFLAGS="$(STAGE3_TFLAGS)"; \
 	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
+	$(POSTSTAGE1_HOST_EXPORTS) LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	cd $(HOST_SUBDIR)/gettext && \
 	 \
 	$(MAKE) $(BASE_FLAGS_TO_PASS) \
@@ -20347,7 +20347,7 @@ all-stage4-gettext: configure-stage4-gettext
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
 	TFLAGS="$(STAGE4_TFLAGS)"; \
 	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
+	$(POSTSTAGE1_HOST_EXPORTS) LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	cd $(HOST_SUBDIR)/gettext && \
 	 \
 	$(MAKE) $(BASE_FLAGS_TO_PASS) \
@@ -20390,7 +20390,7 @@ all-stageprofile-gettext: configure-stageprofile-gettext
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
 	TFLAGS="$(STAGEprofile_TFLAGS)"; \
 	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
+	$(POSTSTAGE1_HOST_EXPORTS) LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	cd $(HOST_SUBDIR)/gettext && \
 	 \
 	$(MAKE) $(BASE_FLAGS_TO_PASS) \
@@ -20433,7 +20433,7 @@ all-stagetrain-gettext: configure-stagetrain-gettext
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
 	TFLAGS="$(STAGEtrain_TFLAGS)"; \
 	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
+	$(POSTSTAGE1_HOST_EXPORTS) LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	cd $(HOST_SUBDIR)/gettext && \
 	 \
 	$(MAKE) $(BASE_FLAGS_TO_PASS) \
@@ -20476,7 +20476,7 @@ all-stagefeedback-gettext: configure-stagefeedback-gettext
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
 	TFLAGS="$(STAGEfeedback_TFLAGS)"; \
 	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
+	$(POSTSTAGE1_HOST_EXPORTS) LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	cd $(HOST_SUBDIR)/gettext && \
 	 \
 	$(MAKE) $(BASE_FLAGS_TO_PASS) \
@@ -20519,7 +20519,7 @@ all-stageautoprofile-gettext: configure-stageautoprofile-gettext
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
 	TFLAGS="$(STAGEautoprofile_TFLAGS)"; \
 	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
+	$(POSTSTAGE1_HOST_EXPORTS) LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	cd $(HOST_SUBDIR)/gettext && \
 	$$s/gcc/config/i386/$(AUTO_PROFILE) \
 	$(MAKE) $(BASE_FLAGS_TO_PASS) \
@@ -20562,7 +20562,7 @@ all-stageautofeedback-gettext: configure-stageautofeedback-gettext
 	s=`cd $(srcdir); ${PWD_COMMAND}`; export s; \
 	TFLAGS="$(STAGEautofeedback_TFLAGS)"; \
 	$(HOST_EXPORTS) \
-	$(POSTSTAGE1_HOST_EXPORTS)  \
+	$(POSTSTAGE1_HOST_EXPORTS) LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS; \
 	cd $(HOST_SUBDIR)/gettext && \
 	 \
 	$(MAKE) $(BASE_FLAGS_TO_PASS) \

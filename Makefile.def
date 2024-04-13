@@ -78,11 +78,16 @@ host_modules= { module= gettext; bootstrap=true; no_install=true;
                 module_srcdir= "gettext/gettext-runtime";
 		// Don't override configure-discovered build arguments
 		all_args_override="";
+		// The toolchain build system overrides LDFLAGS that configure
+		// discovers, so specifying these flags as part of the
+		// configure arguments will not work.  Instead, we need to
+		// export them at configure time as well as make time.
+		extra_exports='LDFLAGS="@LTLIBICONV_SIBLING@ $$LDFLAGS"; export LDFLAGS;';
 		// We always build gettext with pic, because some packages (e.g. gdbserver)
 		// need it in some configuratons, which is determined via nontrivial tests.
 		// Always enabling pic seems to make sense for something tied to
 		// user-facing output.
-		extra_configure_flags='--disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf';
+		extra_configure_flags='--disable-shared --disable-threads --disable-java --disable-csharp --with-pic --disable-libasprintf CPPFLAGS="@LIBICONV_EXTRA_CPPFLAGS@ $$CPPFLAGS" @LIBICONV_CVS@';
 		missing= pdf;
 		missing= html;
 		missing= info;
