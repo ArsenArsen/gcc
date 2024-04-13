@@ -70,3 +70,4 @@ stamp-*
 /gmp*
 /isl*
 /gettext*
+/libiconv*
