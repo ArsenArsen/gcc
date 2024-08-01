@@ -18616,36 +18616,6 @@ add_return_star_this_fixit (gcc_rich_location *richloc, tree fndecl)
 				       indent);
 }
 
-/* This function carries out the subset of finish_function operations needed
-   to emit the compiler-generated outlined helper functions used by the
-   coroutines implementation.  */
-
-static void
-emit_coro_helper (tree helper)
-{
-  /* This is a partial set of the operations done by finish_function()
-     plus emitting the result.  */
-  set_cfun (NULL);
-  current_function_decl = helper;
-  begin_scope (sk_function_parms, NULL);
-  store_parm_decls (DECL_ARGUMENTS (helper));
-  announce_function (helper);
-  allocate_struct_function (helper, false);
-  cfun->language = ggc_cleared_alloc<language_function> ();
-  poplevel (1, 0, 1);
-  maybe_save_constexpr_fundef (helper);
-  /* We must start each function with a clear fold cache.  */
-  clear_fold_cache ();
-  cp_fold_function (helper);
-  DECL_CONTEXT (DECL_RESULT (helper)) = helper;
-  BLOCK_SUPERCONTEXT (DECL_INITIAL (helper)) = helper;
-  /* This function has coroutine IFNs that we should handle in middle
-     end lowering.  */
-  cfun->coroutine_component = true;
-  cp_genericize (helper);
-  expand_or_defer_fn (helper);
-}
-
 /* Finish up a function declaration and compile that function
    all the way to assembler language output.  The free the storage
    for the function definition. INLINE_P is TRUE if we just
@@ -18692,12 +18662,19 @@ finish_function (bool inline_p)
      error_mark_node.  */
   gcc_assert (DECL_INITIAL (fndecl) == error_mark_node);
 
+  if (coro_p && DECL_RAMP_FN (current_function_decl))
+    {
+      /* Not actually a coroutine, just a component of one.  */
+      cfun->coroutine_component = 1;
+      coro_p = false;
+    }
+
   if (coro_p)
     {
       /* Only try to emit the coroutine outlined helper functions if the
 	 transforms succeeded.  Otherwise, treat errors in the same way as
 	 a regular function.  */
-      coro_emit_helpers = morph_fn_to_coro (fndecl, &resumer, &destroyer);
+      coro_emit_helpers = morph_fn_to_coro (fndecl, &resumer, &destroyer, inline_p);
 
       /* We should handle coroutine IFNs in middle end lowering.  */
       cfun->coroutine_component = true;
@@ -18958,8 +18935,8 @@ finish_function (bool inline_p)
      not encountered some fatal error.  */
   if (coro_emit_helpers)
     {
-      emit_coro_helper (resumer);
-      emit_coro_helper (destroyer);
+      expand_or_defer_fn (resumer);
+      expand_or_defer_fn (destroyer);
     }
 
  cleanup:

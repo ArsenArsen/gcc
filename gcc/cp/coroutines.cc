@@ -2316,7 +2316,8 @@ build_actor_fn (location_t loc, tree coro_frame_type, tree actor, tree fnbody,
 		tree orig, hash_map<tree, local_var_info> *local_var_uses,
 		hash_map<tree, suspend_point_info> *suspend_points,
 		vec<tree, va_gc> *param_dtor_list,
-		tree resume_idx_var, unsigned body_count, tree frame_size)
+		tree resume_idx_var, unsigned body_count, tree frame_size,
+		bool inline_p)
 {
   verify_stmt_tree (fnbody);
   /* Some things we inherit from the original function.  */
@@ -2329,16 +2330,14 @@ build_actor_fn (location_t loc, tree coro_frame_type, tree actor, tree fnbody,
   /* We have a definition here.  */
   TREE_STATIC (actor) = 1;
 
-  tree actor_outer = push_stmt_list ();
+  bool spf = start_preparsed_function (actor, NULL_TREE, SF_PRE_PARSED);
+  gcc_checking_assert (spf);
+  tree stmt = begin_function_body ();
   current_stmt_tree ()->stmts_are_full_exprs_p = 1;
-  tree stmt = begin_compound_stmt (BCS_FN_BODY);
 
   tree actor_bind = build3 (BIND_EXPR, void_type_node, NULL, NULL, NULL);
   tree top_block = make_node (BLOCK);
   BIND_EXPR_BLOCK (actor_bind) = top_block;
-
-  /* From here on, we're generating code for the actor.  */
-  auto cfdo = make_temp_override (current_function_decl, actor);
 
   tree continuation = coro_build_artificial_var (loc, coro_actor_continue_id,
 						 void_coro_handle_type, actor,
@@ -2602,9 +2601,8 @@ build_actor_fn (location_t loc, tree coro_frame_type, tree actor, tree fnbody,
   BIND_EXPR_BODY (actor_bind) = pop_stmt_list (actor_body);
   TREE_SIDE_EFFECTS (actor_bind) = true;
 
-  finish_compound_stmt (stmt);
-  DECL_SAVED_TREE (actor) = pop_stmt_list (actor_outer);
-  verify_stmt_tree (DECL_SAVED_TREE (actor));
+  finish_function_body (stmt);
+  finish_function (inline_p);
 }
 
 /* The prototype 'destroy' function :
@@ -2613,7 +2611,7 @@ build_actor_fn (location_t loc, tree coro_frame_type, tree actor, tree fnbody,
 
 static void
 build_destroy_fn (location_t loc, tree coro_frame_type, tree destroy,
-		  tree actor)
+		  tree actor, bool inline_p)
 {
   /* One param, the coro frame pointer.  */
   tree destr_fp = DECL_ARGUMENTS (destroy);
@@ -2621,9 +2619,10 @@ build_destroy_fn (location_t loc, tree coro_frame_type, tree destroy,
   /* We have a definition here.  */
   TREE_STATIC (destroy) = 1;
 
-  tree destr_outer = push_stmt_list ();
+  bool spf = start_preparsed_function (destroy, NULL_TREE, SF_PRE_PARSED);
+  gcc_checking_assert (spf);
+  tree dstr_stmt = begin_function_body ();
   current_stmt_tree ()->stmts_are_full_exprs_p = 1;
-  tree dstr_stmt = begin_compound_stmt (BCS_FN_BODY);
 
   tree destr_frame = build1 (INDIRECT_REF, coro_frame_type, destr_fp);
 
@@ -2649,8 +2648,8 @@ build_destroy_fn (location_t loc, tree coro_frame_type, tree destroy,
   r = maybe_cleanup_point_expr_void (r);
   add_stmt (r);
 
-  finish_compound_stmt (dstr_stmt);
-  DECL_SAVED_TREE (destroy) = pop_stmt_list (destr_outer);
+  finish_function_body (dstr_stmt);
+  finish_function (inline_p);
 }
 
 /* Helper that returns an identifier for an appended extension to the
@@ -4551,7 +4550,7 @@ coro_rewrite_function_body (location_t fn_start, tree fnbody, tree orig,
  };  */
 
 bool
-morph_fn_to_coro (tree orig, tree *resumer, tree *destroyer)
+morph_fn_to_coro (tree orig, tree *resumer, tree *destroyer, bool inline_p)
 {
   gcc_checking_assert (orig && TREE_CODE (orig) == FUNCTION_DECL);
 
@@ -5361,13 +5360,19 @@ morph_fn_to_coro (tree orig, tree *resumer, tree *destroyer)
   push_deferring_access_checks (dk_no_check);
 
   /* Build the actor...  */
+  /* TODO(arsen): dunno if propagating INLINE_P is correct; my guess is yes,
+     but I have not exercised it much.  I see no reason why it would not
+     be.  */
+  push_function_context ();
   build_actor_fn (fn_start, coro_frame_type, actor, fnbody, orig,
 		  &local_var_uses, &suspend_points, param_dtor_list,
-		  resume_idx_var, body_aw_points.await_number, frame_size);
+		  resume_idx_var, body_aw_points.await_number, frame_size,
+		  inline_p);
 
   /* Destroyer ... */
-  build_destroy_fn (fn_start, coro_frame_type, destroy, actor);
+  build_destroy_fn (fn_start, coro_frame_type, destroy, actor, inline_p);
 
+  pop_function_context ();
   pop_deferring_access_checks ();
 
   DECL_SAVED_TREE (orig) = newbody;
