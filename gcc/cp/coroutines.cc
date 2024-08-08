@@ -4674,7 +4674,7 @@ morph_fn_to_coro (tree orig, tree *resumer, tree *destroyer)
 
   tree fr_name = get_fn_local_identifier (orig, "Frame");
   tree coro_frame_type = xref_tag (record_type, fr_name);
-  DECL_CONTEXT (TYPE_NAME (coro_frame_type)) = current_scope ();
+  DECL_CONTEXT (TYPE_NAME (coro_frame_type)) = DECL_CONTEXT (orig);
   tree coro_frame_ptr = build_pointer_type (coro_frame_type);
   tree act_des_fn_type
     = build_function_type_list (void_type_node, coro_frame_ptr, NULL_TREE);
