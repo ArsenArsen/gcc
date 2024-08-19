@@ -104,18 +104,12 @@ lower_coro_builtin (gimple_stmt_iterator *gsi, bool *handled_ops_p,
 	   that is true when we are converting from a promise ptr to a
 	   frame pointer, and false for the inverse.  */
 	tree ptr = gimple_call_arg (stmt, 0);
-	tree align_t = gimple_call_arg (stmt, 1);
 	tree from = gimple_call_arg (stmt, 2);
-	gcc_checking_assert (TREE_CODE (align_t) == INTEGER_CST);
 	gcc_checking_assert (TREE_CODE (from) == INTEGER_CST);
 	bool dir = wi::to_wide (from) != 0;
-	HOST_WIDE_INT promise_align = TREE_INT_CST_LOW (align_t);
 	HOST_WIDE_INT psize =
 	  TREE_INT_CST_LOW (TYPE_SIZE_UNIT (ptr_type_node));
-	HOST_WIDE_INT align = TYPE_ALIGN_UNIT (ptr_type_node);
-	align = MAX (align, promise_align);
 	psize *= 2; /* Start with two pointers.  */
-	psize = ROUND_UP (psize, align);
 	HOST_WIDE_INT offs = dir ? -psize : psize;
 	tree repl = build2 (POINTER_PLUS_EXPR, ptr_type_node, ptr,
 			    size_int (offs));

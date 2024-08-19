@@ -113,6 +113,7 @@ private:
   tree frame_ptr_type;
   tree act_des_fn_type;
   tree act_des_fn_ptr_type;
+  tree promise_type;
 
   /* Cached information about the transformed function.  */
   tree resume_idx_var = NULL_TREE;
@@ -121,7 +122,6 @@ private:
   hash_map<tree, suspend_point_info> suspend_points;
   hash_map<tree, local_var_info> local_var_uses;
   vec<tree> param_dtor_list = vNULL;
-  tree frame_size = NULL_TREE;
   unsigned int await_count = 0;
 
   bool inline_p = false;

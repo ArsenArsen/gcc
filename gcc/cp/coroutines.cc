@@ -197,7 +197,7 @@ coro_maybe_dump_ramp (tree ramp)
 }
 
 static void
-coro_maybe_dump_transformed_functions (tree actor, tree destroy)
+coro_maybe_dump_transformed_functions (tree actor, tree destroy, tree frame_t)
 {
   if (!dmp_str)
     return;
@@ -212,12 +212,9 @@ coro_maybe_dump_transformed_functions (tree actor, tree destroy)
       return;
     }
 
-  tree frame_type = TREE_TYPE (DECL_ARGUMENTS (actor));
-  if (POINTER_TYPE_P (frame_type))
-      frame_type = TREE_TYPE (frame_type);
-  pp_string (&pp, "FRAME type decl");
+  pp_string (&pp, "FRAME type");
   pp_newline_and_indent (&pp, 0);
-  dump_record_type (&pp, frame_type);
+  dump_record_type (&pp, frame_t);
   pp_newline_and_flush (&pp);
 
   pp_string (&pp, "ACTOR/RESUMER:");
@@ -295,6 +292,12 @@ struct GTY((for_user)) coroutine_info
   tree return_void;   /* The expression for p.return_void() if it exists.  */
   location_t first_coro_keyword; /* The location of the keyword that made this
 				    function into a coroutine.  */
+
+ /* Alignment required for the frame, if the frame requires alignment greater
+    than MALLOC_ABI_ALIGNMENT.  In that case, we must emit special handling to
+    ensure alignment.  */
+  unsigned HOST_WIDE_INT frame_overalignment = 0;
+
   /* Flags to avoid repeated errors for per-function issues.  */
   bool coro_ret_type_error_emitted;
   bool coro_promise_error_emitted;
@@ -426,6 +429,7 @@ static GTY(()) tree coro_resume_index_id;
 static GTY(()) tree coro_self_handle_id;
 static GTY(()) tree coro_actor_continue_id;
 static GTY(()) tree coro_frame_i_a_r_c_id;
+static GTY(()) tree coro_frame_padding_id;
 
 /* Create the identifiers used by the coroutines library interfaces and
    the implementation frame state.  */
@@ -463,6 +467,7 @@ coro_init_identifiers ()
   coro_resume_index_id = get_identifier ("_Coro_resume_index");
   coro_self_handle_id = get_identifier ("_Coro_self_handle");
   coro_actor_continue_id = get_identifier ("_Coro_actor_continue");
+  coro_frame_padding_id = get_identifier ("_Coro_padding");
 }
 
 /* Trees we only need to set up once.  */
@@ -2364,6 +2369,39 @@ transform_local_var_uses (tree *stmt, int *do_subtree, void *d)
   return NULL_TREE;
 }
 
+/* Given a RESUME_OR_DESTROY_PTR, creates an expression of type FP_TYPE whose
+   result will be the actual pointer to the frame in which this
+   RESUME_OR_DESTROY_PTR is in.  RESUME_OR_DESTROY_PTR is a resume if RESUME_P
+   is true, otherwise it is a destroyer function pointer.
+
+   If BACKWARDS_P is true, the produced expression vill take a frame pointer to
+   the resume pointer.  In that case, the result is a void*.  */
+
+static tree
+coro_build_resume_to_frame_expr (location_t loc, tree fp_type, tree resume_ptr,
+				 bool backwards_p = false)
+{
+  gcc_assert ((TREE_TYPE (resume_ptr) == ptr_type_node || backwards_p)
+	      && POINTER_TYPE_P (fp_type));
+  tree frame_type = TREE_TYPE (fp_type);
+  gcc_assert (TREE_CODE (frame_type) == RECORD_TYPE);
+
+  /* As FRAME_TYPE ought to be an actual coroutine frame type, it must have a
+     _Coro_resume_fn member.  */
+  tree member = lookup_member (frame_type, coro_resume_fn_id, 0, false, tf_none,
+			       nullptr);
+  gcc_assert (member && TREE_CODE (member) == FIELD_DECL);
+
+  tree off = byte_position (member);
+
+  tree charstar = build_pointer_type (char_type_node);
+  tree res = convert (charstar, resume_ptr);
+  res = cp_build_binary_op (loc, backwards_p ? PLUS_EXPR : MINUS_EXPR, res,
+			    off, tf_none);
+  res = convert (backwards_p ? ptr_type_node : fp_type, res);
+  return res;
+}
+
 /* A helper to build the frame DTOR.
    [dcl.fct.def.coroutine] / 12
    The deallocation function’s name is looked up in the scope of the promise
@@ -2381,7 +2419,40 @@ transform_local_var_uses (tree *stmt, int *do_subtree, void *d)
    argument.  */
 
 static tree
-build_coroutine_frame_delete_expr (tree, tree, tree, tree, location_t);
+build_coroutine_frame_delete_expr (tree, tree, tree, tree, location_t, tree);
+
+
+/* Build an expression that computes the allocation size for the frame type.
+   Also inserts .CO_FRAME and overalignment padding.  */
+
+static tree
+build_coroutine_frame_size_expr (location_t loc, tree orig_fn_decl,
+				 tree frame_type, tree coro_fp)
+{
+  auto coro_info = get_coroutine_info (orig_fn_decl);
+  gcc_assert (coro_info);
+  tree frame_usz = TYPE_SIZE_UNIT (frame_type);
+
+    /* Allow the middle-end to adjust the frame size later.  */
+  frame_usz = build_call_expr_internal_loc (loc, IFN_CO_FRAME, size_type_node,
+					     2, frame_usz, coro_fp);
+
+  if (auto align = coro_info->frame_overalignment)
+    {
+      /* Need to add padding in order to be able to align later.  */
+      frame_usz = cp_build_binary_op (loc, PLUS_EXPR, frame_usz,
+				      build_int_cst (size_type_node,
+						     align - 1),
+				      tf_warning_or_error);
+
+      /* And for the pointer we have to store.  */
+      frame_usz = cp_build_binary_op (loc, PLUS_EXPR, frame_usz,
+				      TYPE_SIZE_UNIT (ptr_type_node),
+				      tf_warning_or_error);
+    }
+
+  return frame_usz;
+}
 
 /* The actor transform.  */
 
@@ -2390,7 +2461,7 @@ build_actor_fn (location_t loc, tree coro_frame_type, tree actor, tree fnbody,
 		tree orig, hash_map<tree, local_var_info> *local_var_uses,
 		hash_map<tree, suspend_point_info> *suspend_points,
 		vec<tree> *param_dtor_list,
-		tree resume_idx_var, unsigned body_count, tree frame_size,
+		tree resume_idx_var, unsigned body_count,
 		bool inline_p)
 {
   verify_stmt_tree (fnbody);
@@ -2398,8 +2469,9 @@ build_actor_fn (location_t loc, tree coro_frame_type, tree actor, tree fnbody,
   tree promise_type = get_coroutine_promise_type (orig);
   tree promise_proxy = get_coroutine_promise_proxy (orig);
 
-  /* One param, the coro frame pointer.  */
-  tree actor_fp = DECL_ARGUMENTS (actor);
+  /* One param, the coro resume pointer.  */
+  tree resume_ptr = DECL_ARGUMENTS (actor);
+  tree frame_ptr_type = build_pointer_type (coro_frame_type);
 
   bool spf = start_preparsed_function (actor, NULL_TREE, SF_PRE_PARSED);
   gcc_checking_assert (spf);
@@ -2410,11 +2482,17 @@ build_actor_fn (location_t loc, tree coro_frame_type, tree actor, tree fnbody,
   tree top_block = make_node (BLOCK);
   BIND_EXPR_BLOCK (actor_bind) = top_block;
 
+  tree rtf_expr = coro_build_resume_to_frame_expr (loc, frame_ptr_type,
+						   resume_ptr);
+  tree frame_ptr = coro_build_artificial_var (loc, get_identifier ("frame_ptr"),
+					       frame_ptr_type, actor, rtf_expr);
+
   tree continuation = coro_build_artificial_var (loc, coro_actor_continue_id,
 						 void_coro_handle_type, actor,
 						 NULL_TREE);
 
   BIND_EXPR_VARS (actor_bind) = continuation;
+  TREE_CHAIN (continuation) = frame_ptr;
   BLOCK_VARS (top_block) = BIND_EXPR_VARS (actor_bind) ;
 
   /* Link in the block associated with the outer scope of the re-written
@@ -2433,9 +2511,10 @@ build_actor_fn (location_t loc, tree coro_frame_type, tree actor, tree fnbody,
   /* The entry point for the actor code from the ramp.  */
   tree actor_begin_label
     = create_named_label_with_ctx (loc, "actor.begin", actor);
-  tree actor_frame = build1_loc (loc, INDIRECT_REF, coro_frame_type, actor_fp);
+  tree actor_frame = build1_loc (loc, INDIRECT_REF, coro_frame_type, frame_ptr);
 
   /* Declare the continuation handle.  */
+  add_decl_expr (frame_ptr);
   add_decl_expr (continuation);
 
   /* Re-write local vars, similarly.  */
@@ -2546,7 +2625,7 @@ build_actor_fn (location_t loc, tree coro_frame_type, tree actor, tree fnbody,
   /* Should have been set earlier by coro_promise_type_found_p.  */
   gcc_assert (hfa_m);
 
-  r = build1 (CONVERT_EXPR, build_pointer_type (void_type_node), actor_fp);
+  r = build1 (CONVERT_EXPR, build_pointer_type (void_type_node), resume_ptr);
   vec<tree, va_gc> *args = make_tree_vector_single (r);
   tree hfa = build_new_method_call (ash, hfa_m, &args, NULL_TREE, LOOKUP_NORMAL,
 				    NULL, tf_warning_or_error);
@@ -2605,9 +2684,11 @@ build_actor_fn (location_t loc, tree coro_frame_type, tree actor, tree fnbody,
     }
 
   /* Build the frame DTOR.  */
+  tree frame_size = build_coroutine_frame_size_expr (loc, orig, coro_frame_type,
+						     frame_ptr);
   tree del_coro_fr
-    = build_coroutine_frame_delete_expr (actor_fp, orig, frame_size,
-					 promise_type, loc);
+    = build_coroutine_frame_delete_expr (frame_ptr, orig, frame_size,
+					 promise_type, loc, coro_frame_type);
   finish_expr_stmt (del_coro_fr);
   finish_then_clause (need_free_if);
   tree scope = IF_SCOPE (need_free_if);
@@ -2661,7 +2742,7 @@ build_actor_fn (location_t loc, tree coro_frame_type, tree actor, tree fnbody,
   /* We've now rewritten the tree and added the initial and final
      co_awaits.  Now pass over the tree and expand the co_awaits.  */
 
-  coro_aw_data data = {actor, actor_fp, resume_idx_var, NULL_TREE,
+  coro_aw_data data = {actor, frame_ptr, resume_idx_var, NULL_TREE,
 		       ash, del_promise_label, ret_label,
 		       continue_label, continuation, 2};
   cp_walk_tree (&actor_body, await_statement_expander, &data, NULL);
@@ -2683,17 +2764,17 @@ build_destroy_fn (location_t loc, tree coro_frame_type, tree destroy,
 		  tree actor, bool inline_p)
 {
   /* One param, the coro frame pointer.  */
-  tree destr_fp = DECL_ARGUMENTS (destroy);
-  gcc_checking_assert (POINTER_TYPE_P (TREE_TYPE (destr_fp))
-		       && same_type_p (coro_frame_type,
-				       TREE_TYPE (TREE_TYPE (destr_fp))));
+  tree resume_ptr = DECL_ARGUMENTS (destroy);
 
   bool spf = start_preparsed_function (destroy, NULL_TREE, SF_PRE_PARSED);
   gcc_checking_assert (spf);
   tree dstr_stmt = begin_function_body ();
 
+
+  tree frame_ptr_t = build_pointer_type (coro_frame_type);
+  tree frame = coro_build_resume_to_frame_expr (loc, frame_ptr_t, resume_ptr);
   tree destr_frame
-    = cp_build_indirect_ref (loc, destr_fp, RO_UNARY_STAR,
+    = cp_build_indirect_ref (loc, frame, RO_UNARY_STAR,
 			     tf_warning_or_error);
 
   tree rat_field = lookup_member (coro_frame_type, coro_resume_index_id,
@@ -2703,15 +2784,12 @@ build_destroy_fn (location_t loc, tree coro_frame_type, tree destroy,
 				      /*reference*/false, tf_warning_or_error);
 
   /* _resume_at |= 1 */
-  tree dstr_idx
-    = build2_loc (loc, BIT_IOR_EXPR, short_unsigned_type_node, rat,
-		  build_int_cst (short_unsigned_type_node, 1));
-  tree r = cp_build_modify_expr (loc, rat, NOP_EXPR, dstr_idx,
+  tree r = cp_build_modify_expr (loc, rat, BIT_IOR_EXPR, integer_one_node,
 				 tf_warning_or_error);
   finish_expr_stmt (r);
 
   /* So .. call the actor ..  */
-  finish_expr_stmt (build_call_expr_loc (loc, actor, 1, destr_fp));
+  finish_expr_stmt (build_call_expr_loc (loc, actor, 1, resume_ptr));
 
   /* done. */
   finish_return_stmt (NULL_TREE);
@@ -4208,12 +4286,11 @@ register_local_var_uses (tree *stmt, int *do_subtree, void *d)
 }
 
 /* Build, return FUNCTION_DECL node based on ORIG with a type FN_TYPE which has
-   a single argument of type CORO_FRAME_PTR.  Build the actor function if
-   ACTOR_P is true, otherwise the destroy. */
+   a single argument of type void*, representing the resume function pointer.
+   Build the actor function if ACTOR_P is true, otherwise the destroy. */
 
 static tree
-coro_build_actor_or_destroy_function (tree orig, tree fn_type,
-				      tree coro_frame_ptr, bool actor_p)
+coro_build_actor_or_destroy_function (tree orig, tree fn_type, bool actor_p)
 {
   location_t loc = DECL_SOURCE_LOCATION (orig);
   tree fn
@@ -4229,10 +4306,10 @@ coro_build_actor_or_destroy_function (tree orig, tree fn_type,
   DECL_ARTIFICIAL (fn) = true;
   DECL_INITIAL (fn) = error_mark_node;
 
-  tree id = get_identifier ("frame_ptr");
-  tree fp = build_lang_decl (PARM_DECL, id, coro_frame_ptr);
+  tree id = get_identifier ("resume_ptr");
+  tree fp = build_lang_decl (PARM_DECL, id, ptr_type_node);
   DECL_CONTEXT (fp) = fn;
-  DECL_ARG_TYPE (fp) = type_passed_as (coro_frame_ptr);
+  DECL_ARG_TYPE (fp) = type_passed_as (ptr_type_node);
   DECL_ARGUMENTS (fn) = fp;
 
   /* Copy selected attributes from the original function.  */
@@ -4601,6 +4678,43 @@ split_coroutine_body_from_ramp (tree fndecl)
   return body;
 }
 
+
+/* Build an lvalue expr for the storage of the real address that the frame
+   allocator returned, allowing us to recover it after aligning it.  This real
+   address is stored right after the coroutine frame.  */
+
+static tree
+build_frame_unaligned_ptr_expr (location_t loc, tree frame_ptr,
+				tree frame_type)
+{
+  tree charstar = build_pointer_type (char_type_node);
+  tree ptrptr_type = build_pointer_type (ptr_type_node);
+  /* We need unit addition here.  */
+  frame_ptr = convert (charstar, frame_ptr);
+
+  tree size = TYPE_SIZE_UNIT (frame_type);
+  tree addr_stor = cp_build_binary_op (loc, PLUS_EXPR, frame_ptr, size,
+				       tf_error);
+  addr_stor = convert (ptrptr_type, addr_stor);
+  addr_stor = build_fold_indirect_ref_loc (loc, addr_stor);
+
+#if CHECKING_P
+  /* Verify some assumptions.  */
+  gcc_assert (TYPE_ALIGN (frame_type) > TYPE_ALIGN (ptrptr_type));
+  if (TREE_CODE (size) == INTEGER_CST)
+    {
+      auto r = fold_binary (TRUNC_MOD_EXPR, size_type_node, size,
+			    build_int_cst (size_type_node,
+					   TYPE_ALIGN_UNIT (frame_type)));
+      gcc_assert (int_cst_value (r) == 0);
+    }
+#endif
+
+  gcc_assert (lvalue_p (addr_stor));
+  return addr_stor;
+}
+
+
 /* Built the expression to allocate the coroutine frame according to the
    rules of [dcl.fct.def.coroutine] / 9.  */
 
@@ -4608,7 +4722,7 @@ static tree
 build_coroutine_frame_alloc_expr (tree promise_type, tree orig_fn_decl,
 				  location_t fn_start, tree grooaf,
 				  hash_map<tree, param_info> *param_uses,
-				  tree frame_size)
+				  tree frame_size, tree frame_type)
 {
   /* Allocate the frame, this has several possibilities:
      [dcl.fct.def.coroutine] / 9 (part 1)
@@ -4619,6 +4733,7 @@ build_coroutine_frame_alloc_expr (tree promise_type, tree orig_fn_decl,
   tree new_fn_call = NULL_TREE;
   tree dummy_promise
     = build_dummy_object (get_coroutine_promise_type (orig_fn_decl));
+  auto coro_info = get_coroutine_info (orig_fn_decl);
 
   if (TYPE_HAS_NEW_OPERATOR (promise_type))
     {
@@ -4726,9 +4841,7 @@ build_coroutine_frame_alloc_expr (tree promise_type, tree orig_fn_decl,
 
       /* If we get to this point, we must succeed in looking up the global
 	 operator new for the params provided.  Extract a simplified version
-	 of the machinery from build_operator_new_call.
-	 NOTE: This can update the frame size so we need to account for that
-	 when building the IFN_CO_FRAME later.  */
+	 of the machinery from build_operator_new_call.  */
       tree cookie = NULL;
       new_fn_call = build_operator_new_call (nwname, &args, &frame_size,
 					     &cookie, /*align_arg=*/NULL,
@@ -4736,18 +4849,92 @@ build_coroutine_frame_alloc_expr (tree promise_type, tree orig_fn_decl,
 					     tf_warning_or_error);
       release_tree_vector (args);
     }
-  return new_fn_call;
+
+  if (auto align = coro_info->frame_overalignment)
+    {
+      /* Need to do extra handling to ensure the op new result is aligned
+	 properly.  */
+      gcc_checking_assert (popcount_hwi (align) == 1);
+      tree aligning_alloc_expr = begin_stmt_expr ();
+      tree aaexpr_comp = begin_compound_stmt (BCS_STMT_EXPR);
+
+      tree charstar = build_pointer_type (char_type_node);
+      tree aligned_addr = build_decl (fn_start, VAR_DECL, NULL_TREE,
+				      charstar);
+      DECL_ARTIFICIAL (aligned_addr) = 1;
+
+      tree unaligned_addr = build_decl (fn_start, VAR_DECL, NULL_TREE,
+					ptr_type_node);
+      DECL_ARTIFICIAL (unaligned_addr) = 1;
+
+      pushdecl (aligned_addr);
+      pushdecl (unaligned_addr);
+
+      auto binop = [&] (enum tree_code cc, tree op1, tree op2)
+      {
+	return cp_build_binary_op (fn_start, cc, op1, op2,
+				   tf_warning_or_error);
+      };
+
+      /* Save the address we've allocated.  */
+      finish_expr_stmt (cp_build_init_expr (fn_start, unaligned_addr,
+					    new_fn_call));
+
+      {
+	/* Compute the aligned value and store it into ALIGNED_ADDR.  */
+	tree alignment_cmask = build_int_cst (uintptr_type_node, align - 1);
+	tree alignment_mask = cp_build_unary_op (BIT_NOT_EXPR, alignment_cmask,
+						 true, tf_warning_or_error);
+	tree align_val = binop (PLUS_EXPR,
+				convert (uintptr_type_node, unaligned_addr),
+				alignment_cmask);
+	align_val = binop (BIT_AND_EXPR, align_val, alignment_mask);
+	align_val = convert (charstar, align_val);
+	align_val = cp_build_modify_expr (fn_start, aligned_addr, NOP_EXPR,
+					  align_val, tf_warning_or_error);
+	finish_expr_stmt (align_val);
+      }
+
+      {
+	/* Okay, now that we've aligned the address we received into
+	   ALIGNED_ADDR, we need to store UNALIGNED_ADDDR right after the frame,
+	   for later reading.  */
+	tree addr_stor = build_frame_unaligned_ptr_expr (fn_start, aligned_addr,
+							 frame_type);
+	addr_stor = cp_build_modify_expr (fn_start, addr_stor, NOP_EXPR,
+					  unaligned_addr, tf_warning_or_error);
+	finish_expr_stmt (addr_stor);
+      }
+
+      /* Our result is the aligned address.  */
+      finish_stmt_expr_expr (aligned_addr, aligning_alloc_expr);
+
+      finish_compound_stmt (aaexpr_comp);
+      aligning_alloc_expr = finish_stmt_expr (aligning_alloc_expr, false);
+      return aligning_alloc_expr;
+    }
+  else
+    /* No extra processing required.  */
+    return new_fn_call;
 }
 
 static tree
 build_coroutine_frame_delete_expr (tree coro_fp, tree orig, tree frame_size,
-				   tree promise_type, location_t loc)
+				   tree promise_type, location_t loc,
+				   tree frame_type)
 {
   tree del_coro_fr = NULL_TREE;
-  tree frame_arg = build1 (CONVERT_EXPR, ptr_type_node, coro_fp);
   tree delname = ovl_op_identifier (false, DELETE_EXPR);
   tree fns = lookup_promise_method (orig, delname, loc,
 					/*musthave=*/false);
+
+  if (get_coroutine_info (orig)->frame_overalignment)
+    /* We've had to overalign the frame.  The address is hence behind an
+       indirection.  */
+    coro_fp = build_frame_unaligned_ptr_expr (loc, coro_fp, frame_type);
+
+  tree frame_arg = build1 (CONVERT_EXPR, ptr_type_node, coro_fp);
+
   if (fns && BASELINK_P (fns))
     {
       /* Look for sized version first, since this takes precedence.  */
@@ -4815,7 +5002,6 @@ cp_coroutine_transform::build_ramp_function ()
   location_t loc = fn_start;
   input_location = loc;
 
-  tree promise_type = get_coroutine_promise_type (orig_fn_decl);
   tree fn_return_type = TREE_TYPE (TREE_TYPE (orig_fn_decl));
   bool void_ramp_p = VOID_TYPE_P (fn_return_type);
   /* We know there was no return statement, that is intentional.  */
@@ -4856,8 +5042,6 @@ cp_coroutine_transform::build_ramp_function ()
   /* Check early for usable allocator/deallocator, without which we cannot
      build a useful ramp; early exit if they are not available or usable.  */
 
-  frame_size = TYPE_SIZE_UNIT (frame_type);
-
   /* Make a var to represent the frame pointer early.  */
   tree zeroinit = build1_loc (loc, CONVERT_EXPR,
 			      frame_ptr_type, nullptr_node);
@@ -4865,9 +5049,13 @@ cp_coroutine_transform::build_ramp_function ()
 					    frame_ptr_type, orig_fn_decl,
 					    zeroinit);
 
+  tree frame_size = build_coroutine_frame_size_expr (fn_start, orig_fn_decl,
+						     frame_type, coro_fp);
+
   tree new_fn_call
     = build_coroutine_frame_alloc_expr (promise_type, orig_fn_decl, fn_start,
-					grooaf, param_uses, frame_size);
+					grooaf, param_uses, frame_size,
+					frame_type);
 
   /* We must have a useable allocator to proceed.  */
   if (!new_fn_call || new_fn_call == error_mark_node)
@@ -4880,7 +5068,7 @@ cp_coroutine_transform::build_ramp_function ()
   /* Likewise, we need the DTOR to delete the frame.  */
   tree delete_frame_call
     = build_coroutine_frame_delete_expr (coro_fp, orig_fn_decl, frame_size,
-					 promise_type, fn_start);
+					 promise_type, fn_start, frame_type);
   if (!delete_frame_call || delete_frame_call == error_mark_node)
     {
       valid_coroutine = false;
@@ -4985,9 +5173,6 @@ cp_coroutine_transform::build_ramp_function ()
      to adjust the allocation in response to optimizations.  We provide the
      current conservative estimate of the frame size (as per the current)
      computed layout.  */
-  tree resizeable = build_call_expr_internal_loc
-    (loc, IFN_CO_FRAME, size_type_node, 2, frame_size, coro_fp);
-  CALL_EXPR_ARG (new_fn_call, 0) = resizeable;
   tree allocated = build1 (CONVERT_EXPR, frame_ptr_type, new_fn_call);
   tree r = cp_build_init_expr (coro_fp, allocated);
   finish_expr_stmt (r);
@@ -5265,7 +5450,8 @@ cp_coroutine_transform::build_ramp_function ()
     }
 
   /* Start the coroutine body.  */
-  r = build_call_expr_loc (fn_start, resumer, 1, coro_fp);
+  r = coro_build_resume_to_frame_expr (loc, frame_ptr_type, coro_fp, true);
+  r = build_call_expr_loc (fn_start, resumer, 1, r);
   finish_expr_stmt (r);
 
   /* The ramp is done, we just need the return statement, which we build from
@@ -5385,6 +5571,8 @@ cp_coroutine_transform::cp_coroutine_transform (tree _orig_fn, bool _inl)
     gcc_checking_assert (orig_fn_decl
 			 && TREE_CODE (orig_fn_decl) == FUNCTION_DECL);
 
+    promise_type = get_coroutine_promise_type (orig_fn_decl);
+
     if (dmp_str == NULL)
       dmp_str = dump_begin (coro_dump_id, NULL);
 
@@ -5481,10 +5669,10 @@ cp_coroutine_transform::apply_transforms ()
      see these.  */
   resumer
     = coro_build_actor_or_destroy_function (orig_fn_decl, act_des_fn_type,
-					    frame_ptr_type, true);
+					    true);
   destroyer
     = coro_build_actor_or_destroy_function (orig_fn_decl, act_des_fn_type,
-					    frame_ptr_type, false);
+					    false);
 
   /* Transform the function body as per [dcl.fct.def.coroutine] / 5.  */
   wrap_original_function_body ();
@@ -5496,6 +5684,25 @@ cp_coroutine_transform::apply_transforms ()
 
   /* Determine the fields for the coro frame.  */
   tree field_list = NULL_TREE;
+
+  /* At the start of our frame, we might need some padding to account for the
+     promise_type alignment.  For the sake of the coroutine ABI, the pointers
+     to the resumer/destroyer _must_ be right before the promise itself.  */
+  auto ptr_type_sz = int_size_in_bytes (ptr_type_node) * BITS_PER_UNIT;
+  /* Should always be representable.  */
+  gcc_assert (ptr_type_sz > 0);
+  if (auto promise_alignment = TYPE_ALIGN (promise_type);
+      promise_alignment > 2 * ptr_type_sz)
+    {
+      tree pad_t = build_array_of_n_type (char_type_node,
+					  (promise_alignment - 2 * ptr_type_sz)
+					  / BITS_PER_UNIT);
+      tree decl = build_decl (UNKNOWN_LOCATION, FIELD_DECL,
+			      coro_frame_padding_id, pad_t);
+      DECL_CHAIN (decl) = field_list;
+      field_list = decl;
+    }
+
   local_vars_frame_data local_vars_data (&field_list, &local_var_uses);
   cp_walk_tree (&coroutine_body, register_local_var_uses, &local_vars_data, NULL);
 
@@ -5506,6 +5713,33 @@ cp_coroutine_transform::apply_transforms ()
   BINFO_OFFSET (TYPE_BINFO (frame_type)) = size_zero_node;
   BINFO_TYPE (TYPE_BINFO (frame_type)) = frame_type;
   frame_type = finish_struct (frame_type, NULL_TREE);
+
+#if CHECKING_P
+  /* Verify the ABI-relevant bits of the layout of the produced frame
+     struct.  */
+  auto frame_offset = [&] (tree memb)
+  {
+    tree member = lookup_member (frame_type, memb, 0, false,
+				 tf_none, nullptr);
+    gcc_assert (member && TREE_CODE (member) == FIELD_DECL);
+    return int_bit_position (member);
+  };
+  auto coro_promise_off = frame_offset (coro_promise_id);
+  auto coro_resumer_off = frame_offset (coro_resume_fn_id);
+  auto coro_destroyer_off = frame_offset (coro_destroy_fn_id);
+  gcc_assert (coro_promise_off == coro_resumer_off + 2 * ptr_type_sz);
+  gcc_assert (coro_promise_off == coro_destroyer_off + ptr_type_sz);
+#endif
+
+  auto frame_align = TYPE_ALIGN (frame_type);
+  if (frame_align > MALLOC_ABI_ALIGNMENT)
+    {
+      /* We need to do over-alignment.  */
+      auto cinfo = get_coroutine_info (orig_fn_decl);
+      gcc_assert (cinfo);
+      gcc_assert ((frame_align % BITS_PER_UNIT) == 0);
+      cinfo->frame_overalignment = frame_align / BITS_PER_UNIT;
+    }
 
   build_ramp_function ();
 }
@@ -5519,12 +5753,12 @@ cp_coroutine_transform::finish_transforms ()
   current_function_decl = resumer;
   build_actor_fn (fn_start, frame_type, resumer, coroutine_body, orig_fn_decl,
 		  &local_var_uses, &suspend_points, &param_dtor_list,
-		  resume_idx_var, await_count, frame_size, inline_p);
+		  resume_idx_var, await_count, inline_p);
 
   current_function_decl = destroyer;
   build_destroy_fn (fn_start, frame_type, destroyer, resumer, inline_p);
 
-  coro_maybe_dump_transformed_functions (resumer, destroyer);
+  coro_maybe_dump_transformed_functions (resumer, destroyer, frame_type);
 }
 
 #include "gt-cp-coroutines.h"
